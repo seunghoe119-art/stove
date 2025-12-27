@@ -512,7 +512,7 @@ export default function Home() {
               {safetyWarnings.map((warning, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-[#654E32] flex-shrink-0 mt-0.5" />
-                  <span className="text-[#444444]">{warning}</span>
+                  <span className="text-[#444444] break-words">{warning}</span>
                 </li>
               ))}
             </ul>
@@ -884,11 +884,11 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-[#666666]">
                 <li className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  
+                  010-1234-5678
                 </li>
                 <li className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  
+                  campingheater@email.com
                 </li>
                 <li>평균 답장시간: 평일 09:00 - 23:00</li>
               </ul>
