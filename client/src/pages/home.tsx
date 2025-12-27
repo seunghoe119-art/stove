@@ -449,6 +449,12 @@ export default function Home() {
             >
               참고용 블로그 보기
             </a>
+            <p className="text-xs text-[#888888] mt-3 max-w-2xl mx-auto px-4">
+              첨부된 블로그 링크는 사용법 안내를 위한 참고 자료입니다.
+              <br className="md:hidden" />
+              <span className="hidden md:inline"> </span>
+              실제 대여해 드리는 난로는 사용감이 거의 없는 깨끗한 상태이니 안심하셔도 됩니다.
+            </p>
           </div>
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-bold text-[#222222] mb-4" data-testid="text-usage-title">
