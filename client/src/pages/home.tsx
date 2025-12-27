@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Flame, 
@@ -139,7 +139,21 @@ const pricingOptions = [
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [reservedDates, setReservedDates] = useState<string[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchReservedDates = async () => {
+      try {
+        const response = await fetch('/api/reserved-dates');
+        const data = await response.json();
+        setReservedDates(data.reservedDates || []);
+      } catch (error) {
+        console.error('Failed to fetch reserved dates:', error);
+      }
+    };
+    fetchReservedDates();
+  }, []);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -158,23 +172,62 @@ export default function Home() {
     mutationFn: async (data: FormData) => {
       return apiRequest("POST", "/api/rental-applications", data);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast({
         title: "신청 완료",
         description: "대여 신청이 완료되었습니다. 빠르게 연락드리겠습니다.",
       });
       form.reset();
+      
+      // Refresh reserved dates
+      try {
+        const response = await fetch('/api/reserved-dates');
+        const data = await response.json();
+        setReservedDates(data.reservedDates || []);
+      } catch (error) {
+        console.error('Failed to refresh reserved dates:', error);
+      }
     },
-    onError: () => {
+    onError: (error: any) => {
+      const message = error?.message || "신청 중 오류가 발생했습니다. 다시 시도해주세요.";
       toast({
         title: "신청 실패",
-        description: "신청 중 오류가 발생했습니다. 다시 시도해주세요.",
+        description: message,
         variant: "destructive",
       });
     },
   });
 
+  const isDateInReserved = (date: string) => {
+    return reservedDates.includes(date);
+  };
+
+  const isRangeOverlapping = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const current = new Date(start);
+    
+    while (current <= end) {
+      const dateStr = current.toISOString().split('T')[0];
+      if (isDateInReserved(dateStr)) {
+        return true;
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return false;
+  };
+
   const onSubmit = (data: FormData) => {
+    // Validate date range before submission
+    if (isRangeOverlapping(data.startDate, data.endDate)) {
+      toast({
+        title: "예약 불가",
+        description: "선택한 기간에 이미 예약된 날짜가 포함되어 있습니다. 다른 날짜를 선택해주세요.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     mutation.mutate(data);
   };
 
@@ -543,9 +596,17 @@ export default function Home() {
                             min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-start-date"
-                            {...field} 
+                            {...field}
+                            style={{
+                              colorScheme: 'light'
+                            }}
                           />
                         </FormControl>
+                        {reservedDates.length > 0 && (
+                          <p className="text-xs text-[#666666]">
+                            파란색 날짜는 이미 예약되어 선택할 수 없습니다
+                          </p>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -565,7 +626,10 @@ export default function Home() {
                             min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-end-date"
-                            {...field} 
+                            {...field}
+                            style={{
+                              colorScheme: 'light'
+                            }}
                           />
                         </FormControl>
                         <FormMessage />

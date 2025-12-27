@@ -8,6 +8,16 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.get("/api/reserved-dates", async (req, res) => {
+    try {
+      const dates = await storage.getReservedDates();
+      return res.json({ reservedDates: dates });
+    } catch (error) {
+      console.error("Error fetching reserved dates:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   app.post("/api/rental-applications", async (req, res) => {
     try {
       const parsed = insertRentalApplicationSchema.safeParse(req.body);
@@ -19,7 +29,26 @@ export async function registerRoutes(
         });
       }
 
+      // Check if date range is available
+      const isAvailable = await storage.isDateRangeAvailable(
+        parsed.data.startDate,
+        parsed.data.endDate
+      );
+
+      if (!isAvailable) {
+        return res.status(409).json({ 
+          error: "선택한 날짜에 이미 예약이 있습니다. 다른 날짜를 선택해주세요." 
+        });
+      }
+
       const application = await storage.createRentalApplication(parsed.data);
+      
+      // Add reserved dates
+      await storage.addReservedDates(
+        application.id,
+        parsed.data.startDate,
+        parsed.data.endDate
+      );
       
       // Send email notification (non-blocking)
       sendApplicationNotification(application).catch(err => {
