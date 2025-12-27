@@ -11,15 +11,9 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.get("/api/reserved-dates", async (req, res) => {
     try {
-      const startDate = new Date();
-      const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 3); // Get 3 months ahead
-
-      const reservedDates = await storage.getReservedDates(startDate, endDate);
-      const dateStrings = reservedDates.map(date => format(date, 'yyyy-MM-dd'));
-
-      console.log('Reserved dates being returned:', dateStrings);
-      res.json({ reservedDates: dateStrings });
+      const reservedDates = await storage.getReservedDates();
+      console.log('Reserved dates being returned:', reservedDates);
+      res.json({ reservedDates });
     } catch (error) {
       console.error('Error fetching reserved dates:', error);
       res.status(500).json({ error: 'Failed to fetch reserved dates' });
