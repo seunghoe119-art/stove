@@ -4,7 +4,7 @@ import { rentalPeriods } from '@shared/schema';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_EMAIL = 'sj240324@outlook.kr';
 
 function getRentalPeriodLabel(value: string): string {
   const period = rentalPeriods.find(p => p.value === value);

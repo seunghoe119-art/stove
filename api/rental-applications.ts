@@ -3,7 +3,7 @@ import { Resend } from 'resend';
 import { z } from 'zod';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_EMAIL = 'sj240324@outlook.kr';
 
 const rentalPeriods = [
   { value: "1night2days", label: "1박 2일 (15,000원)", price: 15000 },
