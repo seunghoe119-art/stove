@@ -42,6 +42,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format as formatDate, addDays, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
+import { DatePickerCalendar } from "@/components/date-picker-calendar";
 
 const formSchema = z.object({
   name: z.string()
@@ -622,87 +623,95 @@ export default function Home() {
                   <FormField
                     control={form.control}
                     name="startDate"
-                    render={({ field }) => {
-                      const today = new Date();
-                      const currentMonth = today.getMonth();
-                      const currentYear = today.getFullYear();
-                      const bookedDates = reservedDates.map(date => formatDate(date, 'yyyy-MM-dd'));
-
-                      return (
-                        <FormItem>
-                          <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            대여 시작일 <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                              data-testid="input-start-date"
-                              min={formatDate(new Date(), 'yyyy-MM-dd')}
-                              value={field.value}
-                              onChange={(e) => {
-                                const selectedDate = e.target.value;
-                                const isReserved = bookedDates.includes(selectedDate);
-                                if (!isReserved) {
-                                  field.onChange(selectedDate);
-                                  setDateRange(prev => ({ ...prev, from: selectedDate ? parseISO(selectedDate) : undefined }));
-                                } else {
-                                  toast({
-                                    title: "예약 불가",
-                                    description: "이미 예약된 날짜입니다.",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          대여 시작일 <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full h-12 justify-start text-left bg-[#F9F8F4] border-[#E5E3DD] hover:bg-[#F0EDE8]",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                data-testid="input-start-date"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value
+                                  ? formatDate(parseISO(field.value), "yyyy년 M월 d일", { locale: ko })
+                                  : "날짜를 선택하세요"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <DatePickerCalendar
+                                selectedDate={field.value ? parseISO(field.value) : undefined}
+                                onSelectDate={(date) => {
+                                  const dateStr = formatDate(date, 'yyyy-MM-dd');
+                                  field.onChange(dateStr);
+                                  setDateRange(prev => ({ ...prev, from: date }));
+                                  if (dateRange.to && date >= dateRange.to) {
+                                    form.setValue('endDate', '');
+                                    setDateRange(prev => ({ ...prev, to: undefined }));
+                                  }
+                                }}
+                                reservedDates={reservedDates}
+                                minDate={new Date()}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
 
                   <FormField
                     control={form.control}
                     name="endDate"
-                    render={({ field }) => {
-                      const minEndDate = dateRange.from ? addDays(dateRange.from, 1) : new Date();
-                      const bookedDates = reservedDates.map(date => formatDate(date, 'yyyy-MM-dd'));
-
-                      return (
-                        <FormItem>
-                          <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            반납 예정일 <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="date"
-                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                              data-testid="input-end-date"
-                              min={dateRange.from ? formatDate(addDays(dateRange.from, 1), 'yyyy-MM-dd') : formatDate(new Date(), 'yyyy-MM-dd')}
-                              value={field.value}
-                              onChange={(e) => {
-                                const selectedDate = e.target.value;
-                                const isReserved = bookedDates.includes(selectedDate);
-                                if (!isReserved) {
-                                  field.onChange(selectedDate);
-                                  setDateRange(prev => ({ ...prev, to: selectedDate ? parseISO(selectedDate) : undefined }));
-                                } else {
-                                  toast({
-                                    title: "예약 불가",
-                                    description: "이미 예약된 날짜입니다.",
-                                    variant: "destructive",
-                                  });
-                                }
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      );
-                    }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          반납 예정일 <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full h-12 justify-start text-left bg-[#F9F8F4] border-[#E5E3DD] hover:bg-[#F0EDE8]",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                                data-testid="input-end-date"
+                              >
+                                <Calendar className="mr-2 h-4 w-4" />
+                                {field.value
+                                  ? formatDate(parseISO(field.value), "yyyy년 M월 d일", { locale: ko })
+                                  : "날짜를 선택하세요"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <DatePickerCalendar
+                                selectedDate={field.value ? parseISO(field.value) : undefined}
+                                onSelectDate={(date) => {
+                                  const dateStr = formatDate(date, 'yyyy-MM-dd');
+                                  field.onChange(dateStr);
+                                  setDateRange(prev => ({ ...prev, to: date }));
+                                }}
+                                reservedDates={reservedDates}
+                                minDate={dateRange.from ? addDays(dateRange.from, 1) : new Date()}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
