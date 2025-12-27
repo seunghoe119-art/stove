@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRentalApplicationSchema } from "@shared/schema";
+import { sendApplicationNotification } from "./email";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -19,6 +20,12 @@ export async function registerRoutes(
       }
 
       const application = await storage.createRentalApplication(parsed.data);
+      
+      // Send email notification (non-blocking)
+      sendApplicationNotification(application).catch(err => {
+        console.error("Failed to send email notification:", err);
+      });
+
       return res.status(201).json(application);
     } catch (error) {
       console.error("Error creating rental application:", error);
