@@ -599,12 +599,30 @@ export default function Home() {
                             value={field.value}
                             onChange={(e) => {
                               field.onChange(e);
+                              
+                              // Calculate rental period if both dates are selected
+                              const endDate = form.getValues("endDate");
+                              if (e.target.value && endDate) {
+                                const start = new Date(e.target.value);
+                                const end = new Date(endDate);
+                                const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                
+                                if (nights === 1) {
+                                  form.setValue("rentalPeriod", "1night2days");
+                                } else if (nights === 2) {
+                                  form.setValue("rentalPeriod", "2nights3days");
+                                } else if (nights === 3) {
+                                  form.setValue("rentalPeriod", "3nights4days");
+                                } else if (nights >= 4) {
+                                  form.setValue("rentalPeriod", "4nightsPlus");
+                                }
+                              }
+                              
                               // Auto-focus end date input after selecting start date
                               setTimeout(() => {
                                 const endDateInput = document.querySelector('[data-testid="input-end-date"]') as HTMLInputElement;
                                 if (endDateInput) {
                                   endDateInput.focus();
-                                  // Trigger a click to open the date picker
                                   endDateInput.click();
                                 }
                               }, 100);
@@ -641,7 +659,31 @@ export default function Home() {
                             min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-end-date"
-                            {...field}
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              
+                              // Calculate rental period if both dates are selected
+                              const startDate = form.getValues("startDate");
+                              if (startDate && e.target.value) {
+                                const start = new Date(startDate);
+                                const end = new Date(e.target.value);
+                                const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                                
+                                if (nights === 1) {
+                                  form.setValue("rentalPeriod", "1night2days");
+                                } else if (nights === 2) {
+                                  form.setValue("rentalPeriod", "2nights3days");
+                                } else if (nights === 3) {
+                                  form.setValue("rentalPeriod", "3nights4days");
+                                } else if (nights >= 4) {
+                                  form.setValue("rentalPeriod", "4nightsPlus");
+                                }
+                              }
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                             style={{
                               colorScheme: 'light'
                             }}
