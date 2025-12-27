@@ -524,6 +524,7 @@ export default function Home() {
                         <FormControl>
                           <Input 
                             type="date"
+                            min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-start-date"
                             {...field} 
@@ -545,6 +546,7 @@ export default function Home() {
                         <FormControl>
                           <Input 
                             type="date"
+                            min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-end-date"
                             {...field} 
