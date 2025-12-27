@@ -469,12 +469,16 @@ export default function Home() {
                             data-testid="input-name"
                             value={field.value}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/[^가-힣]/g, '');
+                              const value = e.target.value;
                               if (value.length <= 4) {
                                 field.onChange(value);
                               }
                             }}
-                            onBlur={field.onBlur}
+                            onBlur={(e) => {
+                              const value = e.target.value.replace(/[^가-힣]/g, '');
+                              field.onChange(value);
+                              field.onBlur();
+                            }}
                             name={field.name}
                             ref={field.ref}
                             maxLength={4}
