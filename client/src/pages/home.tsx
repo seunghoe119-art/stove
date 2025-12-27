@@ -178,7 +178,7 @@ export default function Home() {
         description: "대여 신청이 완료되었습니다. 빠르게 연락드리겠습니다.",
       });
       form.reset();
-      
+
       // Refresh reserved dates
       try {
         const response = await fetch('/api/reserved-dates');
@@ -206,7 +206,7 @@ export default function Home() {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const current = new Date(start);
-    
+
     while (current <= end) {
       const dateStr = current.toISOString().split('T')[0];
       if (isDateInReserved(dateStr)) {
@@ -227,7 +227,7 @@ export default function Home() {
       });
       return;
     }
-    
+
     mutation.mutate(data);
   };
 
@@ -475,15 +475,24 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-[#222222] mb-6" data-testid="text-pricing-title">
               대여 요금 안내
             </h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {pricingOptions.map((option, index) => (
-                <div key={index} className="text-center md:text-left">
-                  <p className="text-sm text-[#666666] mb-1">{option.type}</p>
-                  <p className="text-3xl md:text-4xl font-bold text-[#222222] mb-1" data-testid={`text-price-${index}`}>
-                    {option.price}
-                  </p>
-                  <p className="text-sm text-[#888888]">{option.period}</p>
-                </div>
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              {[
+                { price: "19,000원", description: "1박 2일 기준" },
+                { price: "29,000원", description: "1박 2일 기준" },
+                { price: "39,000원", description: "1박 2일 기준" },
+              ].map((plan, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="p-6 md:p-8 bg-white border-0 shadow-md text-center hover-elevate h-full flex flex-col">
+                    <p className="text-3xl md:text-4xl font-bold text-[#654E32] mb-2">{plan.price}</p>
+                    <p className="text-sm text-[#888888]">{plan.description}</p>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </Card>
@@ -599,14 +608,14 @@ export default function Home() {
                             value={field.value}
                             onChange={(e) => {
                               field.onChange(e);
-                              
+
                               // Calculate rental period if both dates are selected
                               const endDate = form.getValues("endDate");
                               if (e.target.value && endDate) {
                                 const start = new Date(e.target.value);
                                 const end = new Date(endDate);
                                 const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                                
+
                                 if (nights === 1) {
                                   form.setValue("rentalPeriod", "1night2days");
                                 } else if (nights === 2) {
@@ -617,7 +626,7 @@ export default function Home() {
                                   form.setValue("rentalPeriod", "4nightsPlus");
                                 }
                               }
-                              
+
                               // Auto-focus end date input after selecting start date
                               setTimeout(() => {
                                 const endDateInput = document.querySelector('[data-testid="input-end-date"]') as HTMLInputElement;
@@ -662,14 +671,14 @@ export default function Home() {
                             value={field.value}
                             onChange={(e) => {
                               field.onChange(e);
-                              
+
                               // Calculate rental period if both dates are selected
                               const startDate = form.getValues("startDate");
                               if (startDate && e.target.value) {
                                 const start = new Date(startDate);
                                 const end = new Date(e.target.value);
                                 const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                                
+
                                 if (nights === 1) {
                                   form.setValue("rentalPeriod", "1night2days");
                                 } else if (nights === 2) {
@@ -701,13 +710,13 @@ export default function Home() {
                   render={({ field }) => {
                     const startDate = form.watch("startDate");
                     const endDate = form.watch("endDate");
-                    
+
                     let displayText = "대여 기간을 선택하세요";
                     if (startDate && endDate) {
                       const start = new Date(startDate);
                       const end = new Date(endDate);
                       const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                      
+
                       const period = rentalPeriods.find(p => {
                         if (nights === 1 && p.value === "1night2days") return true;
                         if (nights === 2 && p.value === "2nights3days") return true;
@@ -715,10 +724,10 @@ export default function Home() {
                         if (nights >= 4 && p.value === "4nightsPlus") return true;
                         return false;
                       });
-                      
+
                       displayText = period ? period.label : displayText;
                     }
-                    
+
                     return (
                       <FormItem>
                         <FormLabel className="font-semibold text-[#222222]">
