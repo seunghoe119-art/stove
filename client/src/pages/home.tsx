@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Flame, 
-  Shield, 
-  Clock, 
-  Thermometer, 
-  Menu, 
-  X, 
-  Calendar, 
-  Package, 
-  CreditCard, 
+import {
+  Flame,
+  Shield,
+  Clock,
+  Thermometer,
+  Menu,
+  X,
+  Calendar,
+  Package,
+  CreditCard,
   RefreshCw,
   Wind,
   AlertCircle,
@@ -38,6 +38,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { rentalPeriods } from "@shared/schema";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format as formatDate, addDays, isSameDay, parseISO } from "date-fns";
+import { ko } from "date-fns/locale";
+import DayPickerInput from 'react-day-picker/DayPickerInput';
+import 'react-day-picker/lib/style.css';
 
 const formSchema = z.object({
   name: z.string()
@@ -61,52 +67,52 @@ const navItems = [
 ];
 
 const features = [
-  { 
-    icon: Shield, 
-    title: "안전인증", 
-    description: "완벽한 안전 검사" 
+  {
+    icon: Shield,
+    title: "안전인증",
+    description: "완벽한 안전 검사"
   },
-  { 
-    icon: Clock, 
-    title: "빠른 대여", 
-    description: "당일 픽업 가능" 
+  {
+    icon: Clock,
+    title: "빠른 대여",
+    description: "당일 픽업 가능"
   },
-  { 
-    icon: Thermometer, 
-    title: "강력한 난방", 
-    description: "효율적인 열효율" 
+  {
+    icon: Thermometer,
+    title: "강력한 난방",
+    description: "효율적인 열효율"
   },
-  { 
-    icon: Flame, 
-    title: "다양한 종류", 
-    description: "캠핑 스타일별" 
+  {
+    icon: Flame,
+    title: "다양한 종류",
+    description: "캠핑 스타일별"
   },
 ];
 
 const processSteps = [
-  { 
-    step: 1, 
-    icon: Calendar, 
-    title: "날짜 선택", 
-    description: "캠핑 일정에 맞춰 대여 기간을 선택하세요" 
+  {
+    step: 1,
+    icon: Calendar,
+    title: "날짜 선택",
+    description: "캠핑 일정에 맞춰 대여 기간을 선택하세요"
   },
-  { 
-    step: 2, 
-    icon: Package, 
-    title: "난로 선택", 
-    description: "캠핑 인원과 스타일에 맞는 난로를 고르세요" 
+  {
+    step: 2,
+    icon: Package,
+    title: "난로 선택",
+    description: "캠핑 인원과 스타일에 맞는 난로를 고르세요"
   },
-  { 
-    step: 3, 
-    icon: CreditCard, 
-    title: "결제 완료", 
-    description: "온라인으로 간편하게 결제를 진행하세요" 
+  {
+    step: 3,
+    icon: CreditCard,
+    title: "결제 완료",
+    description: "온라인으로 간편하게 결제를 진행하세요"
   },
-  { 
-    step: 4, 
-    icon: RefreshCw, 
-    title: "픽업/반납", 
-    description: "예약한 날짜에 픽업하고 사용 후 반납하세요" 
+  {
+    step: 4,
+    icon: RefreshCw,
+    title: "픽업/반납",
+    description: "예약한 날짜에 픽업하고 사용 후 반납하세요"
   },
 ];
 
@@ -139,7 +145,8 @@ const pricingOptions = [
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [reservedDates, setReservedDates] = useState<string[]>([]);
+  const [reservedDates, setReservedDates] = useState<Date[]>([]);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -147,7 +154,8 @@ export default function Home() {
       try {
         const response = await fetch('/api/reserved-dates');
         const data = await response.json();
-        setReservedDates(data.reservedDates || []);
+        const parsedDates = (data.reservedDates || []).map((dateStr: string) => parseISO(dateStr));
+        setReservedDates(parsedDates);
       } catch (error) {
         console.error('Failed to fetch reserved dates:', error);
       }
@@ -178,12 +186,14 @@ export default function Home() {
         description: "대여 신청이 완료되었습니다. 빠르게 연락드리겠습니다.",
       });
       form.reset();
+      setDateRange({ from: undefined, to: undefined }); // Reset date range picker
 
       // Refresh reserved dates
       try {
         const response = await fetch('/api/reserved-dates');
         const data = await response.json();
-        setReservedDates(data.reservedDates || []);
+        const parsedDates = (data.reservedDates || []).map((dateStr: string) => parseISO(dateStr));
+        setReservedDates(parsedDates);
       } catch (error) {
         console.error('Failed to refresh reserved dates:', error);
       }
@@ -198,34 +208,55 @@ export default function Home() {
     },
   });
 
-  const isDateInReserved = (date: string) => {
-    return reservedDates.includes(date);
+  const isDateReserved = (date: Date) => {
+    return reservedDates.some(reservedDate => isSameDay(reservedDate, date));
   };
 
-  const isRangeOverlapping = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const current = new Date(start);
-
-    while (current <= end) {
-      const dateStr = current.toISOString().split('T')[0];
-      if (isDateInReserved(dateStr)) {
-        return true;
-      }
-      current.setDate(current.getDate() + 1);
+  const handleSelectDateRange = (range: { from?: Date, to?: Date }) => {
+    setDateRange(range);
+    if (range.from) {
+      form.setValue("startDate", formatDate(range.from, "yyyy-MM-dd"));
+    } else {
+      form.setValue("startDate", "");
     }
-    return false;
+    if (range.to) {
+      form.setValue("endDate", formatDate(range.to, "yyyy-MM-dd"));
+    } else {
+      form.setValue("endDate", "");
+    }
+
+    // Update rental period based on selected dates
+    if (range.from && range.to) {
+      const nights = Math.ceil((range.to.getTime() - range.from.getTime()) / (1000 * 60 * 60 * 24));
+      if (nights === 1) {
+        form.setValue("rentalPeriod", "1night2days");
+      } else if (nights === 2) {
+        form.setValue("rentalPeriod", "2nights3days");
+      } else if (nights === 3) {
+        form.setValue("rentalPeriod", "3nights4days");
+      } else if (nights >= 4) {
+        form.setValue("rentalPeriod", "4nightsPlus");
+      }
+    } else {
+      form.setValue("rentalPeriod", ""); // Reset if range is incomplete
+    }
   };
 
   const onSubmit = (data: FormData) => {
-    // Validate date range before submission
-    if (isRangeOverlapping(data.startDate, data.endDate)) {
-      toast({
-        title: "예약 불가",
-        description: "선택한 기간에 이미 예약된 날짜가 포함되어 있습니다. 다른 날짜를 선택해주세요.",
-        variant: "destructive",
-      });
-      return;
+    // Custom validation for overlapping dates
+    const start = parseISO(data.startDate);
+    const end = parseISO(data.endDate);
+    let current = new Date(start);
+    while (current <= end) {
+      if (isDateReserved(current)) {
+        toast({
+          title: "예약 불가",
+          description: "선택한 기간에 이미 예약된 날짜가 포함되어 있습니다. 다른 날짜를 선택해주세요.",
+          variant: "destructive",
+        });
+        return;
+      }
+      current.setDate(current.getDate() + 1);
     }
 
     mutation.mutate(data);
@@ -244,7 +275,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 bg-[#F9F8F4]/95 backdrop-blur-sm border-b border-[#E5E3DD]">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between gap-4">
-            <button 
+            <button
               onClick={() => scrollToSection("home")}
               className="flex items-center gap-2"
               data-testid="link-logo"
@@ -525,8 +556,8 @@ export default function Home() {
                           이름 <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="홍길동" 
+                          <Input
+                            placeholder="홍길동"
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-name"
                             value={field.value}
@@ -559,8 +590,8 @@ export default function Home() {
                           연락처 <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="010-0000-0000" 
+                          <Input
+                            placeholder="010-0000-0000"
                             type="tel"
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-phone"
@@ -593,86 +624,72 @@ export default function Home() {
                   <FormField
                     control={form.control}
                     name="startDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          대여 시작일 <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="date"
-                            min={new Date().toISOString().split('T')[0]}
-                            className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                            data-testid="input-start-date"
-                            value={field.value}
-                            onChange={(e) => {
-                              const selectedDate = e.target.value;
+                    render={({ field }) => {
+                      const today = new Date();
+                      const currentMonth = today.getMonth();
+                      const currentYear = today.getFullYear();
+                      const bookedDates = reservedDates.map(date => formatDate(date, 'yyyy-MM-dd'));
 
-                              // Check if selected date is reserved
-                              if (isDateInReserved(selectedDate)) {
-                                toast({
-                                  title: "예약 불가",
-                                  description: "이미 예약된 날짜입니다. 다른 날짜를 선택해주세요.",
-                                  variant: "destructive",
-                                });
-                                return;
-                              }
-
-                              field.onChange(e);
-
-                              // Calculate rental period if both dates are selected
-                              const endDate = form.getValues("endDate");
-                              if (selectedDate && endDate) {
-                                const start = new Date(selectedDate);
-                                const end = new Date(endDate);
-                                const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-                                if (nights === 1) {
-                                  form.setValue("rentalPeriod", "1night2days");
-                                } else if (nights === 2) {
-                                  form.setValue("rentalPeriod", "2nights3days");
-                                } else if (nights === 3) {
-                                  form.setValue("rentalPeriod", "3nights4days");
-                                } else if (nights >= 4) {
-                                  form.setValue("rentalPeriod", "4nightsPlus");
-                                }
-                              }
-
-                              // Auto-focus end date input after selecting start date
-                              setTimeout(() => {
-                                const endDateInput = document.querySelector('[data-testid="input-end-date"]') as HTMLInputElement;
-                                if (endDateInput) {
-                                  endDateInput.focus();
-                                  endDateInput.click();
-                                }
-                              }, 100);
-                            }}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                            style={{
-                              colorScheme: 'light'
-                            }}
-                          />
-                        </FormControl>
-                        {reservedDates.length > 0 && (
-                          <p className="text-xs text-[#666666]">
-                            * 이미 예약된 날짜는 선택할 수 없습니다
-                          </p>
-                        )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                      return (
+                        <FormItem>
+                          <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            대여 시작일 <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full justify-start text-left h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]",
+                                    !dateRange.from && "text-muted-foreground"
+                                  )}
+                                  data-testid="input-start-date"
+                                >
+                                  {dateRange.from ? formatDate(dateRange.from, "PPP", { locale: ko }) : "YYYY-MM-DD"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <DayPickerInput
+                                  value={dateRange.from}
+                                  placeholder="YYYY-MM-DD"
+                                  format="yyyy-MM-dd"
+                                  dayPickerProps={{
+                                    locale: ko,
+                                    disabledDays: [
+                                      { before: new Date() },
+                                      ...reservedDates
+                                    ],
+                                    modifiers: {
+                                      reserved: reservedDates,
+                                    },
+                                    modifiersClassNames: {
+                                      reserved: 'reserved-date',
+                                    },
+                                    onDayClick: (day, modifiers) => {
+                                      if (!modifiers.disabled) {
+                                        handleSelectDateRange({ from: day, to: dateRange.to });
+                                      }
+                                    },
+                                  }}
+                                  inputProps={{ "data-testid": "day-picker-start-date" }}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
+
                   <FormField
                     control={form.control}
                     name="endDate"
                     render={({ field }) => {
-                      const startDate = form.watch("startDate");
-                      const minEndDate = startDate 
-                        ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-                        : new Date().toISOString().split('T')[0];
+                      const minEndDate = dateRange.from ? addDays(dateRange.from, 1) : new Date();
+                      const bookedDates = reservedDates.map(date => formatDate(date, 'yyyy-MM-dd'));
 
                       return (
                         <FormItem>
@@ -681,40 +698,46 @@ export default function Home() {
                             반납 예정일 <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input 
-                              type="date"
-                              min={minEndDate}
-                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                              data-testid="input-end-date"
-                              value={field.value}
-                              onChange={(e) => {
-                                field.onChange(e);
-
-                                // Calculate rental period if both dates are selected
-                                const startDate = form.getValues("startDate");
-                                if (startDate && e.target.value) {
-                                  const start = new Date(startDate);
-                                  const end = new Date(e.target.value);
-                                  const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-
-                                  if (nights === 1) {
-                                    form.setValue("rentalPeriod", "1night2days");
-                                  } else if (nights === 2) {
-                                    form.setValue("rentalPeriod", "2nights3days");
-                                  } else if (nights === 3) {
-                                    form.setValue("rentalPeriod", "3nights4days");
-                                  } else if (nights >= 4) {
-                                    form.setValue("rentalPeriod", "4nightsPlus");
-                                  }
-                                }
-                              }}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              style={{
-                                colorScheme: 'light'
-                              }}
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full justify-start text-left h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]",
+                                    !dateRange.to && "text-muted-foreground"
+                                  )}
+                                  data-testid="input-end-date"
+                                >
+                                  {dateRange.to ? formatDate(dateRange.to, "PPP", { locale: ko }) : "YYYY-MM-DD"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <DayPickerInput
+                                  value={dateRange.to}
+                                  placeholder="YYYY-MM-DD"
+                                  format="yyyy-MM-dd"
+                                  dayPickerProps={{
+                                    locale: ko,
+                                    disabledDays: [
+                                      { before: minEndDate },
+                                      ...reservedDates
+                                    ],
+                                    modifiers: {
+                                      reserved: reservedDates,
+                                    },
+                                    modifiersClassNames: {
+                                      reserved: 'reserved-date',
+                                    },
+                                    onDayClick: (day, modifiers) => {
+                                      if (!modifiers.disabled) {
+                                        handleSelectDateRange({ from: dateRange.from, to: day });
+                                      }
+                                    },
+                                  }}
+                                  inputProps={{ "data-testid": "day-picker-end-date" }}
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -732,8 +755,8 @@ export default function Home() {
 
                     let displayText = "대여 기간을 선택하세요";
                     if (startDate && endDate) {
-                      const start = new Date(startDate);
-                      const end = new Date(endDate);
+                      const start = parseISO(startDate);
+                      const end = parseISO(endDate);
                       const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
                       const period = rentalPeriods.find(p => {
@@ -753,14 +776,14 @@ export default function Home() {
                           대여 기간 <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <div 
+                          <div
                             className="h-12 bg-[#EBE9E4] border border-[#E5E3DD] rounded-md px-3 flex items-center text-[#222222]"
                             data-testid="select-rental-period"
                           >
                             {displayText}
                           </div>
                         </FormControl>
-                        <input type="hidden" {...field} />
+                        <input type="hidden" {...field} value={field.value} />
                         <FormMessage />
                       </FormItem>
                     );
@@ -774,11 +797,11 @@ export default function Home() {
                     <FormItem>
                       <FormLabel className="font-semibold text-[#222222]">추가 요청사항</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="픽업 시간, 특별 요청사항 등을 자유롭게 작성해주세요"
                           className="min-h-[150px] bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32] resize-none"
                           data-testid="textarea-additional"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -803,9 +826,9 @@ export default function Home() {
               문의사항이 있으시면 언제든지 연락주세요
               <br className="md:hidden" />
               <span className="hidden md:inline"> · </span>
-              <a 
-                href="https://open.kakao.com/o/sUqjDx8h" 
-                target="_blank" 
+              <a
+                href="https://open.kakao.com/o/sUqjDx8h"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold text-[#654E32] hover:underline"
               >
