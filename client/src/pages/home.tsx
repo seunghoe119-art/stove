@@ -646,7 +646,7 @@ export default function Home() {
                                   : "날짜를 선택하세요"}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-[calc(100vw-2rem)] max-w-md p-0" align="start">
                               <DatePickerCalendar
                                 selectedDate={field.value ? parseISO(field.value) : undefined}
                                 onSelectDate={(date) => {
@@ -695,7 +695,7 @@ export default function Home() {
                                   : "날짜를 선택하세요"}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-[calc(100vw-2rem)] max-w-md p-0" align="start">
                               <DatePickerCalendar
                                 selectedDate={field.value ? parseISO(field.value) : undefined}
                                 onSelectDate={(date) => {
