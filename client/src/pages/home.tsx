@@ -495,26 +495,6 @@ export default function Home() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-[#222222]">이메일</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="example@email.com" 
-                          type="email"
-                          className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                          data-testid="input-email"
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
