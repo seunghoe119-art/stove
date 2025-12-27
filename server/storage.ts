@@ -112,6 +112,32 @@ export class MemStorage implements IStorage {
     // In a real application, you'd delete from the 'reserved_dates' table
     this.reservedDates.delete(dateString);
   }
+
+  async isDateRangeAvailable(startDate: string, endDate: string): Promise<boolean> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+      const dateString = format(currentDate, 'yyyy-MM-dd');
+      if (this.reservedDates.has(dateString)) {
+        return false;
+      }
+      currentDate = addDays(currentDate, 1);
+    }
+    return true;
+  }
+
+  async addReservedDates(rentalApplicationId: string, startDate: string, endDate: string): Promise<void> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let currentDate = new Date(start);
+    
+    while (currentDate <= end) {
+      await this.addReservedDate(currentDate, rentalApplicationId);
+      currentDate = addDays(currentDate, 1);
+    }
+  }
 }
 
 export const storage = new MemStorage();

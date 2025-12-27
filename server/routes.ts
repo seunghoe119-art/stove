@@ -10,8 +10,15 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.get("/api/reserved-dates", async (req, res) => {
     try {
-      const dates = await storage.getReservedDates();
-      return res.json({ reservedDates: dates });
+      // Get reserved dates for the next 6 months
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 6);
+      
+      const dates = await storage.getReservedDates(startDate, endDate);
+      const dateStrings = dates.map(date => date.toISOString().split('T')[0]);
+      
+      return res.json({ reservedDates: dateStrings });
     } catch (error) {
       console.error("Error fetching reserved dates:", error);
       return res.status(500).json({ error: "Internal server error" });
