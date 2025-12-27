@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRentalApplicationSchema } from "@shared/schema";
 import { sendApplicationNotification } from "./email";
+import { format } from 'date-fns';
 
 export async function registerRoutes(
   httpServer: Server,
@@ -10,25 +11,25 @@ export async function registerRoutes(
 ): Promise<Server> {
   app.get("/api/reserved-dates", async (req, res) => {
     try {
-      // Get reserved dates for the next 6 months
       const startDate = new Date();
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 6);
-      
-      const dates = await storage.getReservedDates(startDate, endDate);
-      const dateStrings = dates.map(date => date.toISOString().split('T')[0]);
-      
-      return res.json({ reservedDates: dateStrings });
+      endDate.setMonth(endDate.getMonth() + 3); // Get 3 months ahead
+
+      const reservedDates = await storage.getReservedDates(startDate, endDate);
+      const dateStrings = reservedDates.map(date => format(date, 'yyyy-MM-dd'));
+
+      console.log('Reserved dates being returned:', dateStrings);
+      res.json({ reservedDates: dateStrings });
     } catch (error) {
-      console.error("Error fetching reserved dates:", error);
-      return res.status(500).json({ error: "Internal server error" });
+      console.error('Error fetching reserved dates:', error);
+      res.status(500).json({ error: 'Failed to fetch reserved dates' });
     }
   });
 
   app.post("/api/rental-applications", async (req, res) => {
     try {
       const parsed = insertRentalApplicationSchema.safeParse(req.body);
-      
+
       if (!parsed.success) {
         return res.status(400).json({ 
           error: "Invalid request data",
@@ -49,14 +50,14 @@ export async function registerRoutes(
       }
 
       const application = await storage.createRentalApplication(parsed.data);
-      
+
       // Add reserved dates
       await storage.addReservedDates(
         application.id,
         parsed.data.startDate,
         parsed.data.endDate
       );
-      
+
       // Send email notification (non-blocking)
       sendApplicationNotification(application).catch(err => {
         console.error("Failed to send email notification:", err);

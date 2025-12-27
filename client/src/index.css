@@ -290,4 +290,15 @@
   input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
   }
+
+  /* Add styling for reserved dates */
+  input[type="date"]::-webkit-calendar-day(reserved) {
+    background-color: #f0ad4e; /* Example color for reserved dates */
+    color: white; /* Text color for reserved dates */
+  }
+
+  input[type="date"]::-webkit-calendar-day(disabled) {
+    background-color: #e0e0e0; /* Example color for disabled dates */
+    color: #a0a0a0; /* Text color for disabled dates */
+  }
 }

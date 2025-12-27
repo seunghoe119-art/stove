@@ -607,12 +607,24 @@ export default function Home() {
                             data-testid="input-start-date"
                             value={field.value}
                             onChange={(e) => {
+                              const selectedDate = e.target.value;
+                              
+                              // Check if selected date is reserved
+                              if (isDateInReserved(selectedDate)) {
+                                toast({
+                                  title: "예약 불가",
+                                  description: "이미 예약된 날짜입니다. 다른 날짜를 선택해주세요.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
                               field.onChange(e);
 
                               // Calculate rental period if both dates are selected
                               const endDate = form.getValues("endDate");
-                              if (e.target.value && endDate) {
-                                const start = new Date(e.target.value);
+                              if (selectedDate && endDate) {
+                                const start = new Date(selectedDate);
                                 const end = new Date(endDate);
                                 const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -646,7 +658,7 @@ export default function Home() {
                         </FormControl>
                         {reservedDates.length > 0 && (
                           <p className="text-xs text-[#666666]">
-                            파란색 날짜는 이미 예약되어 선택할 수 없습니다
+                            * 이미 예약된 날짜는 선택할 수 없습니다
                           </p>
                         )}
                         <FormMessage />
@@ -656,51 +668,58 @@ export default function Home() {
                   <FormField
                     control={form.control}
                     name="endDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          반납 예정일 <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="date"
-                            min={new Date().toISOString().split('T')[0]}
-                            className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                            data-testid="input-end-date"
-                            value={field.value}
-                            onChange={(e) => {
-                              field.onChange(e);
+                    render={({ field }) => {
+                      const startDate = form.watch("startDate");
+                      const minEndDate = startDate 
+                        ? new Date(new Date(startDate).getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                        : new Date().toISOString().split('T')[0];
 
-                              // Calculate rental period if both dates are selected
-                              const startDate = form.getValues("startDate");
-                              if (startDate && e.target.value) {
-                                const start = new Date(startDate);
-                                const end = new Date(e.target.value);
-                                const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                      return (
+                        <FormItem>
+                          <FormLabel className="font-semibold text-[#222222] flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            반납 예정일 <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="date"
+                              min={minEndDate}
+                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
+                              data-testid="input-end-date"
+                              value={field.value}
+                              onChange={(e) => {
+                                field.onChange(e);
 
-                                if (nights === 1) {
-                                  form.setValue("rentalPeriod", "1night2days");
-                                } else if (nights === 2) {
-                                  form.setValue("rentalPeriod", "2nights3days");
-                                } else if (nights === 3) {
-                                  form.setValue("rentalPeriod", "3nights4days");
-                                } else if (nights >= 4) {
-                                  form.setValue("rentalPeriod", "4nightsPlus");
+                                // Calculate rental period if both dates are selected
+                                const startDate = form.getValues("startDate");
+                                if (startDate && e.target.value) {
+                                  const start = new Date(startDate);
+                                  const end = new Date(e.target.value);
+                                  const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+                                  if (nights === 1) {
+                                    form.setValue("rentalPeriod", "1night2days");
+                                  } else if (nights === 2) {
+                                    form.setValue("rentalPeriod", "2nights3days");
+                                  } else if (nights === 3) {
+                                    form.setValue("rentalPeriod", "3nights4days");
+                                  } else if (nights >= 4) {
+                                    form.setValue("rentalPeriod", "4nightsPlus");
+                                  }
                                 }
-                              }
-                            }}
-                            onBlur={field.onBlur}
-                            name={field.name}
-                            ref={field.ref}
-                            style={{
-                              colorScheme: 'light'
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                              }}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                              style={{
+                                colorScheme: 'light'
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
                 </div>
 

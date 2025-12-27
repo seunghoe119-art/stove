@@ -101,6 +101,7 @@ export class MemStorage implements IStorage {
     // For MemStorage, we simulate it here.
     if (!this.reservedDates.has(dateString)) {
       this.reservedDates.set(dateString, { rentalApplicationId });
+      console.log(`Reserved date added: ${dateString} for application ${rentalApplicationId}`);
     } else {
       // Handle potential conflicts if needed, e.g., throw an error or update
       console.warn(`Date ${dateString} is already reserved.`);
