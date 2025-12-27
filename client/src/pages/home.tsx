@@ -344,16 +344,6 @@ export default function Home() {
 
       <section id="home" className="py-8 md:py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-6">
-            <a
-              href="https://blog.naver.com/jing2_s/223239396663?trackingCode=blog_bloghome_searchlist"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#654E32] hover:bg-[#4D3B26] text-white font-medium rounded-lg transition-colors"
-            >
-              참고용 블로그 보기
-            </a>
-          </div>
           <Carousel
             opts={{
               align: "start",
@@ -448,6 +438,16 @@ export default function Home() {
 
       <section id="usage" className="py-16 md:py-24 px-4 bg-[#F9F8F4]">
         <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <a
+              href="https://blog.naver.com/jing2_s/223239396663?trackingCode=blog_bloghome_searchlist"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#654E32] hover:bg-[#4D3B26] text-white font-medium rounded-lg transition-colors"
+            >
+              참고용 블로그 보기
+            </a>
+          </div>
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-4xl font-bold text-[#222222] mb-4" data-testid="text-usage-title">
               난로 사용법
