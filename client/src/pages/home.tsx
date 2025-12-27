@@ -596,7 +596,21 @@ export default function Home() {
                             min={new Date().toISOString().split('T')[0]}
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-start-date"
-                            {...field}
+                            value={field.value}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              // Auto-focus end date input after selecting start date
+                              setTimeout(() => {
+                                const endDateInput = document.querySelector('[data-testid="input-end-date"]') as HTMLInputElement;
+                                if (endDateInput) {
+                                  endDateInput.focus();
+                                  endDateInput.showPicker?.();
+                                }
+                              }, 100);
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                             style={{
                               colorScheme: 'light'
                             }}
