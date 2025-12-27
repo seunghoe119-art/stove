@@ -42,8 +42,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format as formatDate, addDays, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
-import DayPickerInput from 'react-day-picker/DayPickerInput';
-import 'react-day-picker/lib/style.css';
 
 const formSchema = z.object({
   name: z.string()
@@ -637,46 +635,27 @@ export default function Home() {
                             대여 시작일 <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full justify-start text-left h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]",
-                                    !dateRange.from && "text-muted-foreground"
-                                  )}
-                                  data-testid="input-start-date"
-                                >
-                                  {dateRange.from ? formatDate(dateRange.from, "PPP", { locale: ko }) : "YYYY-MM-DD"}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <DayPickerInput
-                                  value={dateRange.from}
-                                  placeholder="YYYY-MM-DD"
-                                  format="yyyy-MM-dd"
-                                  dayPickerProps={{
-                                    locale: ko,
-                                    disabledDays: [
-                                      { before: new Date() },
-                                      ...reservedDates
-                                    ],
-                                    modifiers: {
-                                      reserved: reservedDates,
-                                    },
-                                    modifiersClassNames: {
-                                      reserved: 'reserved-date',
-                                    },
-                                    onDayClick: (day, modifiers) => {
-                                      if (!modifiers.disabled) {
-                                        handleSelectDateRange({ from: day, to: dateRange.to });
-                                      }
-                                    },
-                                  }}
-                                  inputProps={{ "data-testid": "day-picker-start-date" }}
-                                />
-                              </PopoverContent>
-                            </Popover>
+                            <Input
+                              type="date"
+                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
+                              data-testid="input-start-date"
+                              min={formatDate(new Date(), 'yyyy-MM-dd')}
+                              value={field.value}
+                              onChange={(e) => {
+                                const selectedDate = e.target.value;
+                                const isReserved = bookedDates.includes(selectedDate);
+                                if (!isReserved) {
+                                  field.onChange(selectedDate);
+                                  setDateRange(prev => ({ ...prev, from: selectedDate ? parseISO(selectedDate) : undefined }));
+                                } else {
+                                  toast({
+                                    title: "예약 불가",
+                                    description: "이미 예약된 날짜입니다.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -698,46 +677,27 @@ export default function Home() {
                             반납 예정일 <span className="text-red-500">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-full justify-start text-left h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]",
-                                    !dateRange.to && "text-muted-foreground"
-                                  )}
-                                  data-testid="input-end-date"
-                                >
-                                  {dateRange.to ? formatDate(dateRange.to, "PPP", { locale: ko }) : "YYYY-MM-DD"}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="start">
-                                <DayPickerInput
-                                  value={dateRange.to}
-                                  placeholder="YYYY-MM-DD"
-                                  format="yyyy-MM-dd"
-                                  dayPickerProps={{
-                                    locale: ko,
-                                    disabledDays: [
-                                      { before: minEndDate },
-                                      ...reservedDates
-                                    ],
-                                    modifiers: {
-                                      reserved: reservedDates,
-                                    },
-                                    modifiersClassNames: {
-                                      reserved: 'reserved-date',
-                                    },
-                                    onDayClick: (day, modifiers) => {
-                                      if (!modifiers.disabled) {
-                                        handleSelectDateRange({ from: dateRange.from, to: day });
-                                      }
-                                    },
-                                  }}
-                                  inputProps={{ "data-testid": "day-picker-end-date" }}
-                                />
-                              </PopoverContent>
-                            </Popover>
+                            <Input
+                              type="date"
+                              className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
+                              data-testid="input-end-date"
+                              min={dateRange.from ? formatDate(addDays(dateRange.from, 1), 'yyyy-MM-dd') : formatDate(new Date(), 'yyyy-MM-dd')}
+                              value={field.value}
+                              onChange={(e) => {
+                                const selectedDate = e.target.value;
+                                const isReserved = bookedDates.includes(selectedDate);
+                                if (!isReserved) {
+                                  field.onChange(selectedDate);
+                                  setDateRange(prev => ({ ...prev, to: selectedDate ? parseISO(selectedDate) : undefined }));
+                                } else {
+                                  toast({
+                                    title: "예약 불가",
+                                    description: "이미 예약된 날짜입니다.",
+                                    variant: "destructive",
+                                  });
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
