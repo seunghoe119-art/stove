@@ -1,7 +1,8 @@
+
 import { type User, type InsertUser, type RentalApplication, type InsertRentalApplication } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { pool } from "./db";
-import { format, addDays, differenceInDays } from 'date-fns';
+import { format, addDays } from 'date-fns';
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -10,123 +11,138 @@ export interface IStorage {
   createRentalApplication(application: InsertRentalApplication): Promise<RentalApplication>;
   getRentalApplications(): Promise<RentalApplication[]>;
   getRentalApplication(id: string): Promise<RentalApplication | undefined>;
-  // New methods for reserved dates
   getReservedDates(startDate: Date, endDate: Date): Promise<Date[]>;
   addReservedDate(date: Date, rentalApplicationId: string): Promise<void>;
   removeReservedDate(date: Date): Promise<void>;
+  isDateRangeAvailable(startDate: string, endDate: string): Promise<boolean>;
+  addReservedDates(rentalApplicationId: string, startDate: string, endDate: string): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private rentalApplications: Map<string, RentalApplication>;
-  // In-memory storage for reserved dates (for demonstration, ideally use DB)
-  private reservedDates: Map<string, { rentalApplicationId: string }>; // Key is date string YYYY-MM-DD
-
-  constructor() {
-    this.users = new Map();
-    this.rentalApplications = new Map();
-    this.reservedDates = new Map();
-  }
-
+export class PostgresStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    return result.rows[0];
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+    return result.rows[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const result = await pool.query(
+      'INSERT INTO users (id, username, password) VALUES ($1, $2, $3) RETURNING *',
+      [id, insertUser.username, insertUser.password]
+    );
+    return result.rows[0];
   }
 
   async createRentalApplication(insertApplication: InsertRentalApplication): Promise<RentalApplication> {
     const id = randomUUID();
-    const application: RentalApplication = { 
-      id,
-      name: insertApplication.name,
-      phone: insertApplication.phone,
-      email: insertApplication.email ?? null,
-      startDate: insertApplication.startDate,
-      endDate: insertApplication.endDate,
-      rentalPeriod: insertApplication.rentalPeriod,
-      additionalRequests: insertApplication.additionalRequests ?? null,
+    const result = await pool.query(
+      `INSERT INTO rental_applications 
+       (id, name, phone, email, start_date, end_date, rental_period, additional_requests) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+       RETURNING *`,
+      [
+        id,
+        insertApplication.name,
+        insertApplication.phone,
+        insertApplication.email ?? null,
+        insertApplication.startDate,
+        insertApplication.endDate,
+        insertApplication.rentalPeriod,
+        insertApplication.additionalRequests ?? null,
+      ]
+    );
+
+    const application = result.rows[0];
+    
+    // Convert snake_case to camelCase
+    return {
+      id: application.id,
+      name: application.name,
+      phone: application.phone,
+      email: application.email,
+      startDate: application.start_date,
+      endDate: application.end_date,
+      rentalPeriod: application.rental_period,
+      additionalRequests: application.additional_requests,
     };
-    this.rentalApplications.set(id, application);
-
-    // Add reserved dates to in-memory storage
-    let currentDate = new Date(application.startDate);
-    const endDate = new Date(application.endDate);
-    while (currentDate <= endDate) {
-      this.addReservedDate(currentDate, id); // Use the in-memory addReservedDate
-      currentDate = addDays(currentDate, 1);
-    }
-
-    return application;
   }
 
   async getRentalApplications(): Promise<RentalApplication[]> {
-    return Array.from(this.rentalApplications.values());
+    const result = await pool.query('SELECT * FROM rental_applications ORDER BY start_date DESC');
+    return result.rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      rentalPeriod: row.rental_period,
+      additionalRequests: row.additional_requests,
+    }));
   }
 
   async getRentalApplication(id: string): Promise<RentalApplication | undefined> {
-    return this.rentalApplications.get(id);
+    const result = await pool.query('SELECT * FROM rental_applications WHERE id = $1', [id]);
+    if (result.rows.length === 0) return undefined;
+    
+    const row = result.rows[0];
+    return {
+      id: row.id,
+      name: row.name,
+      phone: row.phone,
+      email: row.email,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      rentalPeriod: row.rental_period,
+      additionalRequests: row.additional_requests,
+    };
   }
 
-  // --- Reserved Dates Management ---
-
   async getReservedDates(startDate: Date, endDate: Date): Promise<Date[]> {
-    const reserved: Date[] = [];
-    let currentDate = new Date(startDate);
-    const end = new Date(endDate);
-
-    while (currentDate <= end) {
-      const dateString = format(currentDate, 'yyyy-MM-dd');
-      if (this.reservedDates.has(dateString)) {
-        reserved.push(new Date(currentDate));
-      }
-      currentDate = addDays(currentDate, 1);
-    }
-    return reserved;
+    const result = await pool.query(
+      `SELECT reserved_date FROM reserved_dates 
+       WHERE reserved_date >= $1 AND reserved_date <= $2 
+       ORDER BY reserved_date`,
+      [format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')]
+    );
+    
+    return result.rows.map(row => new Date(row.reserved_date));
   }
 
   async addReservedDate(date: Date, rentalApplicationId: string): Promise<void> {
     const dateString = format(date, 'yyyy-MM-dd');
-    // In a real application, you'd insert into the 'reserved_dates' table
-    // For MemStorage, we simulate it here.
-    if (!this.reservedDates.has(dateString)) {
-      this.reservedDates.set(dateString, { rentalApplicationId });
+    try {
+      await pool.query(
+        `INSERT INTO reserved_dates (rental_application_id, reserved_date) 
+         VALUES ($1, $2) 
+         ON CONFLICT (reserved_date) DO NOTHING`,
+        [rentalApplicationId, dateString]
+      );
       console.log(`Reserved date added: ${dateString} for application ${rentalApplicationId}`);
-    } else {
-      // Handle potential conflicts if needed, e.g., throw an error or update
-      console.warn(`Date ${dateString} is already reserved.`);
+    } catch (error) {
+      console.error(`Error adding reserved date ${dateString}:`, error);
+      throw error;
     }
   }
 
   async removeReservedDate(date: Date): Promise<void> {
     const dateString = format(date, 'yyyy-MM-dd');
-    // In a real application, you'd delete from the 'reserved_dates' table
-    this.reservedDates.delete(dateString);
+    await pool.query('DELETE FROM reserved_dates WHERE reserved_date = $1', [dateString]);
   }
 
   async isDateRangeAvailable(startDate: string, endDate: string): Promise<boolean> {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    let currentDate = new Date(start);
+    const result = await pool.query(
+      `SELECT COUNT(*) as count FROM reserved_dates 
+       WHERE reserved_date >= $1 AND reserved_date <= $2`,
+      [startDate, endDate]
+    );
     
-    while (currentDate <= end) {
-      const dateString = format(currentDate, 'yyyy-MM-dd');
-      if (this.reservedDates.has(dateString)) {
-        return false;
-      }
-      currentDate = addDays(currentDate, 1);
-    }
-    return true;
+    return parseInt(result.rows[0].count) === 0;
   }
 
   async addReservedDates(rentalApplicationId: string, startDate: string, endDate: string): Promise<void> {
@@ -141,4 +157,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PostgresStorage();
