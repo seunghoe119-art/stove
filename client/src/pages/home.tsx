@@ -698,31 +698,45 @@ export default function Home() {
                 <FormField
                   control={form.control}
                   name="rentalPeriod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-semibold text-[#222222]">
-                        대여 기간 <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  render={({ field }) => {
+                    const startDate = form.watch("startDate");
+                    const endDate = form.watch("endDate");
+                    
+                    let displayText = "대여 기간을 선택하세요";
+                    if (startDate && endDate) {
+                      const start = new Date(startDate);
+                      const end = new Date(endDate);
+                      const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                      
+                      const period = rentalPeriods.find(p => {
+                        if (nights === 1 && p.value === "1night2days") return true;
+                        if (nights === 2 && p.value === "2nights3days") return true;
+                        if (nights === 3 && p.value === "3nights4days") return true;
+                        if (nights >= 4 && p.value === "4nightsPlus") return true;
+                        return false;
+                      });
+                      
+                      displayText = period ? period.label : displayText;
+                    }
+                    
+                    return (
+                      <FormItem>
+                        <FormLabel className="font-semibold text-[#222222]">
+                          대여 기간 <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
-                          <SelectTrigger 
-                            className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
+                          <div 
+                            className="h-12 bg-[#EBE9E4] border border-[#E5E3DD] rounded-md px-3 flex items-center text-[#222222]"
                             data-testid="select-rental-period"
                           >
-                            <SelectValue placeholder="대여 기간을 선택하세요" />
-                          </SelectTrigger>
+                            {displayText}
+                          </div>
                         </FormControl>
-                        <SelectContent>
-                          {rentalPeriods.map((period) => (
-                            <SelectItem key={period.value} value={period.value}>
-                              {period.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                        <input type="hidden" {...field} />
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
