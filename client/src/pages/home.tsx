@@ -40,7 +40,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { rentalPeriods } from "@shared/schema";
 
 const formSchema = z.object({
-  name: z.string().min(1, "이름을 입력해주세요"),
+  name: z.string()
+    .min(1, "이름을 입력해주세요")
+    .regex(/^[가-힣]{3,4}$/, "한글 3-4글자만 입력 가능합니다"),
   phone: z.string().min(1, "연락처를 입력해주세요"),
   email: z.string().email("올바른 이메일을 입력해주세요").optional().or(z.literal("")),
   startDate: z.string().min(1, "대여 시작일을 선택해주세요"),
@@ -465,7 +467,17 @@ export default function Home() {
                             placeholder="홍길동" 
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-name"
-                            {...field} 
+                            value={field.value}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^가-힣]/g, '');
+                              if (value.length <= 4) {
+                                field.onChange(value);
+                              }
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            maxLength={4}
                           />
                         </FormControl>
                         <FormMessage />
