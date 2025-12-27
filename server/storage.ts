@@ -1,20 +1,22 @@
-import { type User, type InsertUser } from "@shared/schema";
+import { type User, type InsertUser, type RentalApplication, type InsertRentalApplication } from "@shared/schema";
 import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  createRentalApplication(application: InsertRentalApplication): Promise<RentalApplication>;
+  getRentalApplications(): Promise<RentalApplication[]>;
+  getRentalApplication(id: string): Promise<RentalApplication | undefined>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
+  private rentalApplications: Map<string, RentalApplication>;
 
   constructor() {
     this.users = new Map();
+    this.rentalApplications = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -32,6 +34,21 @@ export class MemStorage implements IStorage {
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
     return user;
+  }
+
+  async createRentalApplication(insertApplication: InsertRentalApplication): Promise<RentalApplication> {
+    const id = randomUUID();
+    const application: RentalApplication = { ...insertApplication, id };
+    this.rentalApplications.set(id, application);
+    return application;
+  }
+
+  async getRentalApplications(): Promise<RentalApplication[]> {
+    return Array.from(this.rentalApplications.values());
+  }
+
+  async getRentalApplication(id: string): Promise<RentalApplication | undefined> {
+    return this.rentalApplications.get(id);
   }
 }
 
