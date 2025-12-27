@@ -153,6 +153,8 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reservedDates, setReservedDates] = useState<Date[]>([]);
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -675,7 +677,7 @@ export default function Home() {
                           대여 시작일 <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Popover>
+                          <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -702,6 +704,8 @@ export default function Home() {
                                     form.setValue('endDate', '');
                                     setDateRange(prev => ({ ...prev, to: undefined }));
                                   }
+                                  setStartDateOpen(false);
+                                  setTimeout(() => setEndDateOpen(true), 100);
                                 }}
                                 reservedDates={reservedDates}
                                 minDate={new Date()}
@@ -724,7 +728,7 @@ export default function Home() {
                           반납 예정일 <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                          <Popover>
+                          <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                             <PopoverTrigger asChild>
                               <Button
                                 variant="outline"
@@ -747,6 +751,7 @@ export default function Home() {
                                   const dateStr = formatDate(date, 'yyyy-MM-dd');
                                   field.onChange(dateStr);
                                   setDateRange(prev => ({ ...prev, to: date }));
+                                  setEndDateOpen(false);
                                 }}
                                 reservedDates={reservedDates}
                                 minDate={dateRange.from ? addDays(dateRange.from, 1) : new Date()}

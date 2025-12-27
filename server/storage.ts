@@ -34,6 +34,10 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createRentalApplication(insertApplication: InsertRentalApplication): Promise<RentalApplication> {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+
     const id = randomUUID();
     const application: RentalApplication = {
       id,
@@ -45,7 +49,32 @@ export class SupabaseStorage implements IStorage {
       rentalPeriod: insertApplication.rentalPeriod,
       additionalRequests: insertApplication.additionalRequests ?? null,
     };
-    return application;
+
+    try {
+      const { error } = await supabase
+        .from('rental_applications')
+        .insert({
+          id: application.id,
+          name: application.name,
+          phone: application.phone,
+          email: application.email,
+          start_date: application.startDate,
+          end_date: application.endDate,
+          rental_period: application.rentalPeriod,
+          additional_requests: application.additionalRequests,
+        });
+
+      if (error) {
+        console.error('Error creating rental application:', error);
+        throw error;
+      }
+
+      console.log(`Created rental application ${id} for ${application.name}`);
+      return application;
+    } catch (error) {
+      console.error('Error creating rental application:', error);
+      throw error;
+    }
   }
 
   async getRentalApplications(): Promise<RentalApplication[]> {
