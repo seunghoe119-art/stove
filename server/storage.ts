@@ -38,7 +38,16 @@ export class MemStorage implements IStorage {
 
   async createRentalApplication(insertApplication: InsertRentalApplication): Promise<RentalApplication> {
     const id = randomUUID();
-    const application: RentalApplication = { ...insertApplication, id };
+    const application: RentalApplication = { 
+      id,
+      name: insertApplication.name,
+      phone: insertApplication.phone,
+      email: insertApplication.email ?? null,
+      startDate: insertApplication.startDate,
+      endDate: insertApplication.endDate,
+      heaterType: insertApplication.heaterType,
+      additionalRequests: insertApplication.additionalRequests ?? null,
+    };
     this.rentalApplications.set(id, application);
     return application;
   }
