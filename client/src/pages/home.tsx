@@ -604,7 +604,8 @@ export default function Home() {
                                 const endDateInput = document.querySelector('[data-testid="input-end-date"]') as HTMLInputElement;
                                 if (endDateInput) {
                                   endDateInput.focus();
-                                  endDateInput.showPicker?.();
+                                  // Trigger a click to open the date picker
+                                  endDateInput.click();
                                 }
                               }, 100);
                             }}
