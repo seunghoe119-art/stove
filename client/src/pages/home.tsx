@@ -43,6 +43,13 @@ import { cn } from "@/lib/utils";
 import { format as formatDate, addDays, isSameDay, parseISO } from "date-fns";
 import { ko } from "date-fns/locale";
 import { DatePickerCalendar } from "@/components/date-picker-calendar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const formSchema = z.object({
   name: z.string()
@@ -335,7 +342,35 @@ export default function Home() {
         </AnimatePresence>
       </header>
 
-      <section id="home" className="py-16 md:py-24 px-4">
+      <section id="home" className="py-8 md:py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full max-w-md mx-auto mb-8 md:mb-12"
+          >
+            <CarouselContent>
+              {[1, 2, 3, 4, 5].map((num) => (
+                <CarouselItem key={num}>
+                  <div className="px-3">
+                    <div className="aspect-[3/4] overflow-hidden rounded-2xl shadow-lg">
+                      <img
+                        src={`/st${num}-2.png`}
+                        alt={`캠핑난로 이미지 ${num}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-0" />
+            <CarouselNext className="right-0" />
+          </Carousel>
+        </div>
+
         <div className="max-w-6xl mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

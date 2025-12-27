@@ -314,3 +314,10 @@
     color: #a0a0a0; /* Text color for disabled dates */
   }
 }
+
+@layer components {
+  .carousel-arrow {
+    @apply bg-white/90 backdrop-blur-sm hover:bg-white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+}
