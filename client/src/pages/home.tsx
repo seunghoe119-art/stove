@@ -98,14 +98,14 @@ const processSteps = [
   {
     step: 2,
     icon: Package,
-    title: "난로 선택",
-    description: "캠핑 인원과 스타일에 맞는 난로를 고르세요"
+    title: "연락 방법",
+    description: "신청페이지에 신청이 가능합니다."
   },
   {
     step: 3,
     icon: CreditCard,
-    title: "결제 완료",
-    description: "온라인으로 간편하게 결제를 진행하세요"
+    title: "예약 완료",
+    description: "신청하신 휴대폰으로 전화나 문자로 연락드립니다"
   },
   {
     step: 4,
@@ -828,13 +828,13 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-[#666666]">
                 <li className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  전화: 1588-0000
+                  
                 </li>
                 <li className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  이메일: info@camping-heater.com
+                  
                 </li>
-                <li>운영시간: 평일 09:00 - 18:00</li>
+                <li>평균 답장시간: 평일 09:00 - 23:00</li>
               </ul>
             </div>
 
@@ -843,10 +843,10 @@ export default function Home() {
               <ul className="space-y-2 text-sm text-[#666666]">
                 <li className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  서울특별시 강남구 테헤란로 123
+                  인천 계양구 효서로303번길 19
                 </li>
-                <li className="pl-6">캠핑난로 대여센터 1층</li>
-                <li className="pl-6">주차 가능 (무료)</li>
+                <li className="pl-6">작전삼성홈타운</li>
+                <li className="pl-6">지하주차장 주차가능(엘베연결되있음)</li>
               </ul>
             </div>
           </div>
