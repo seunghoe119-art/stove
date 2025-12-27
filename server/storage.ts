@@ -45,7 +45,7 @@ export class MemStorage implements IStorage {
       email: insertApplication.email ?? null,
       startDate: insertApplication.startDate,
       endDate: insertApplication.endDate,
-      heaterType: insertApplication.heaterType,
+      rentalPeriod: insertApplication.rentalPeriod,
       additionalRequests: insertApplication.additionalRequests ?? null,
     };
     this.rentalApplications.set(id, application);

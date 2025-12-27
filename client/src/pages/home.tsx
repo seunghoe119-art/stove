@@ -37,7 +37,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { heaterTypes } from "@shared/schema";
+import { rentalPeriods } from "@shared/schema";
 
 const formSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요"),
@@ -45,7 +45,7 @@ const formSchema = z.object({
   email: z.string().email("올바른 이메일을 입력해주세요").optional().or(z.literal("")),
   startDate: z.string().min(1, "대여 시작일을 선택해주세요"),
   endDate: z.string().min(1, "반납 예정일을 선택해주세요"),
-  heaterType: z.string().min(1, "난로 종류를 선택해주세요"),
+  rentalPeriod: z.string().min(1, "대여 기간을 선택해주세요"),
   additionalRequests: z.string().optional(),
 });
 
@@ -147,7 +147,7 @@ export default function Home() {
       email: "",
       startDate: "",
       endDate: "",
-      heaterType: "basic",
+      rentalPeriod: "1night2days",
       additionalRequests: "",
     },
   });
@@ -542,25 +542,25 @@ export default function Home() {
 
                 <FormField
                   control={form.control}
-                  name="heaterType"
+                  name="rentalPeriod"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-semibold text-[#222222]">
-                        난로 종류 <span className="text-red-500">*</span>
+                        대여 기간 <span className="text-red-500">*</span>
                       </FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger 
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
-                            data-testid="select-heater-type"
+                            data-testid="select-rental-period"
                           >
-                            <SelectValue placeholder="난로 종류를 선택하세요" />
+                            <SelectValue placeholder="대여 기간을 선택하세요" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {heaterTypes.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
+                          {rentalPeriods.map((period) => (
+                            <SelectItem key={period.value} value={period.value}>
+                              {period.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

@@ -23,7 +23,7 @@ export const rentalApplications = pgTable("rental_applications", {
   email: text("email"),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
-  heaterType: text("heater_type").notNull(),
+  rentalPeriod: text("rental_period").notNull(),
   additionalRequests: text("additional_requests"),
 });
 
@@ -34,8 +34,9 @@ export const insertRentalApplicationSchema = createInsertSchema(rentalApplicatio
 export type InsertRentalApplication = z.infer<typeof insertRentalApplicationSchema>;
 export type RentalApplication = typeof rentalApplications.$inferSelect;
 
-export const heaterTypes = [
-  { value: "basic", label: "기본형 난로 (15,000원/1박2일)", price: 15000 },
-  { value: "premium", label: "프리미엄 난로 (25,000원/1박2일)", price: 25000 },
-  { value: "large", label: "대형 난로 (35,000원/1박2일)", price: 35000 },
+export const rentalPeriods = [
+  { value: "1night2days", label: "1박 2일 (15,000원)", price: 15000 },
+  { value: "2nights3days", label: "2박 3일 (25,000원)", price: 25000 },
+  { value: "3nights4days", label: "3박 4일 (35,000원)", price: 35000 },
+  { value: "4nightsPlus", label: "4박 5일 이상", price: null },5,000원/1박2일)", price: 35000 },
 ] as const;
