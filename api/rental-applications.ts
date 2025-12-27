@@ -6,10 +6,10 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 const ADMIN_EMAIL = 'sj240324@outlook.kr';
 
 const rentalPeriods = [
-  { value: "1night2days", label: "1박 2일 (15,000원)", price: 15000 },
-  { value: "2nights3days", label: "2박 3일 (25,000원)", price: 25000 },
-  { value: "3nights4days", label: "3박 4일 (35,000원)", price: 35000 },
-  { value: "4nightsPlus", label: "4박 5일 이상 (5,000원/1박 추가)", price: null },
+  { value: "1night2days", label: "1박 2일 (19,000원)", price: 19000 },
+  { value: "2nights3days", label: "2박 3일 (29,000원)", price: 29000 },
+  { value: "3nights4days", label: "3박 4일 (39,000원)", price: 39000 },
+  { value: "4nightsPlus", label: "4박 5일 이상 (10,000원/1박 추가)", price: null },
 ] as const;
 
 const applicationSchema = z.object({

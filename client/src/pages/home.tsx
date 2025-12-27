@@ -478,8 +478,8 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-6 mb-12">
               {[
                 { price: "19,000원", description: "1박 2일 기준" },
-                { price: "29,000원", description: "1박 2일 기준" },
-                { price: "39,000원", description: "1박 2일 기준" },
+                { price: "29,000원", description: "2박 3일 기준" },
+                { price: "39,000원", description: "3박 4일 기준" },
               ].map((plan, index) => (
                 <motion.div
                   key={index}
