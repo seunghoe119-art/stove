@@ -448,7 +448,7 @@ export default function Home() {
 
           <Card className="p-6 md:p-8 bg-white border-0 shadow-lg rounded-xl">
             <h3 className="text-xl font-semibold text-[#222222] mb-6">신청서 작성</h3>
-            
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -482,11 +482,27 @@ export default function Home() {
                         </FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="010-1234-5678" 
+                            placeholder="010-0000-0000" 
                             type="tel"
                             className="h-12 bg-[#F9F8F4] border-[#E5E3DD] focus:border-[#654E32]"
                             data-testid="input-phone"
-                            {...field} 
+                            value={field.value}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/[^0-9]/g, '');
+                              if (value.length <= 11) {
+                                let formatted = value;
+                                if (value.length > 3) {
+                                  formatted = value.slice(0, 3) + '-' + value.slice(3);
+                                }
+                                if (value.length > 7) {
+                                  formatted = value.slice(0, 3) + '-' + value.slice(3, 7) + '-' + value.slice(7);
+                                }
+                                field.onChange(formatted);
+                              }
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
                           />
                         </FormControl>
                         <FormMessage />
