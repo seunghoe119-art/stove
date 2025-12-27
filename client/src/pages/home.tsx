@@ -772,7 +772,17 @@ export default function Home() {
 
           <div className="text-center mt-8 py-4">
             <p className="text-[#666666]">
-              문의사항이 있으시면 언제든지 연락주세요 · <span className="font-semibold text-[#654E32]">1588-0000</span>
+              문의사항이 있으시면 언제든지 연락주세요
+              <br className="md:hidden" />
+              <span className="hidden md:inline"> · </span>
+              <a 
+                href="https://open.kakao.com/o/sUqjDx8h" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="font-semibold text-[#654E32] hover:underline"
+              >
+                오픈카카오톡방 문의
+              </a>
             </p>
           </div>
         </div>
